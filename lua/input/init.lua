@@ -1,0 +1,84 @@
+local M = {}
+
+local function input(opts, on_confirm)
+    local config = require "input.config"
+    local utils = require "input.utils"
+    local win_config = config.win_config
+
+    local prompt = opts.prompt or config.default_prompt
+    local default = opts.default or ""
+    local prompt_lines = vim.split(prompt, "\n", { plain = true, trimempty = true })
+
+    local width = utils.calculate_width(win_config.relative, win_config.width, config.width_options)
+    width = math.max(width, utils.get_max_strwidth(prompt_lines) + 4, vim.api.nvim_strwidth(default) + 2)
+
+    win_config.title = utils.trim_and_pad_title(prompt)
+    win_config.width = utils.calculate_width(win_config.relative, width, config.width_options)
+
+    local function close(winid, content)
+        vim.cmd.stopinsert()
+        on_confirm(content)
+        vim.api.nvim_win_close(winid, true)
+    end
+
+    --- Create buffer.
+    local bufnr = vim.api.nvim_create_buf(false, true)
+
+    -- Set buffer options.
+    for option, value in pairs(config.buf_options) do
+        vim.bo[bufnr][option] = value
+    end
+
+    -- Create floating window.
+    local winid = vim.api.nvim_open_win(bufnr, true, win_config)
+
+    -- Set window options.
+    for option, value in pairs(config.win_options) do
+        vim.wo[winid][option] = value
+    end
+
+    vim.api.nvim_buf_set_text(bufnr, 0, 0, 0, 0, { default })
+    vim.cmd.startinsert()
+    vim.api.nvim_win_set_cursor(winid, { 1, vim.str_utfindex(default, "utf-8") + 1 })
+
+    vim.keymap.set({ "n", "i", "v" }, "<cr>", function()
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
+
+        close(winid, lines[1])
+    end, { buffer = bufnr })
+
+    vim.keymap.set("i", "<C-c>", function()
+        close(winid)
+    end, { buffer = bufnr })
+
+    vim.keymap.set("n", "<esc>", function()
+        close(winid)
+    end, { buffer = bufnr })
+
+    vim.keymap.set("n", "q", function()
+        close(winid)
+    end, { buffer = bufnr })
+
+    local augroup = vim.api.nvim_create_augroup("input", { clear = true })
+
+    vim.api.nvim_create_autocmd("BufLeave", {
+        group = augroup,
+        desc = "Cancel vim.ui.input",
+        buffer = bufnr,
+        nested = true,
+        once = true,
+        callback = function()
+            close(winid)
+        end,
+    })
+end
+
+function M.setup(opts)
+    local config = require "input.config"
+
+    config.extend(opts)
+
+    vim.ui.input = input
+end
+
+return M
