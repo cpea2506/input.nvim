@@ -29,10 +29,27 @@ Once installed, this plugin is activated automatically. No setup is required unl
 
 ### Available Options
 
+| Option           | Description                               | Type                 | Note                                |
+| ---------------- | ----------------------------------------- | -------------------- | ----------------------------------- |
+| `icon`           | Icon displayed alongside the input prompt | `string`             | N/A                                 |
+| `default_prompt` | Default text shown in the input prompt    | `string`             | N/A                                 |
+| `win_options`    | Window-level Vim options                  | `table<string, any>` | `:h nvim_win_set_option`            |
+| `buf_options`    | Buffer-level Vim options                  | `table<string, any>` | `:h nvim_buf_set_option`            |
+| `win_config`     | Window configuration for `nvim_open_win`  | `table<string, any>` | `:h nvim_open_win`                  |
+| `width_options`  | Dynamic width settings                    | `table<string, any>` | See [Width Options](#width-options) |
+
+#### Width Options
+
+| Sub-Option  | Description           | Type               | Note                                  |
+| ----------- | --------------------- | ------------------ | ------------------------------------- |
+| `prefer`    | Preferred input width | `number`           | Used as the default target width      |
+| `min_value` | Minimum allowed width | `{number, number}` | Supports fixed width and window ratio |
+| `max_value` | Maximum allowed width | `{number, number}` | Supports fixed width and window ratio |
+
 ### Default Configuration
 
 ```lua
-{
+require("input").setup({
     icon = "",
     default_prompt = "Input",
     win_options = {
@@ -63,7 +80,7 @@ Once installed, this plugin is activated automatically. No setup is required unl
         min_value = { 20, 0.2 },
         max_value = { 140, 0.9 },
     },
-}
+})
 ```
 
 ## :eyes: Inspiration
