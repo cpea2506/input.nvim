@@ -2,8 +2,8 @@ local config = {}
 
 ---@class input.width_options
 ---@field prefer number
----@field min_value table<number>
----@field max_value table<number>
+---@field min_value number[]
+---@field max_value number[]
 
 ---@class input.options
 ---@field icon string
