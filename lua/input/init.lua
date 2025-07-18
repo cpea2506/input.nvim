@@ -23,7 +23,6 @@ local function input(opts, on_confirm)
         vim.bo[bufnr][option] = value
     end
 
-    vim.bo[bufnr].buftype = "prompt"
     -- Create floating window.
     local winid = vim.api.nvim_open_win(bufnr, true, win_config)
 
@@ -32,7 +31,6 @@ local function input(opts, on_confirm)
         vim.wo[winid][option] = value
     end
 
-    vim.wo[winid].statuscolumn = [[%!v:lua.require("input.config").statuscolumn()]]
     local function close()
         vim.api.nvim_win_close(winid, true)
     end

@@ -20,9 +20,11 @@ local defaults = {
         list = true,
         listchars = "precedes:…,extends:…",
         sidescrolloff = 0,
+        statuscolumn = [[%!v:lua.require("input.config").statuscolumn()]],
     },
     buf_options = {
         swapfile = false,
+        buftype = "prompt",
         bufhidden = "wipe",
         filetype = "input",
     },
@@ -34,8 +36,6 @@ local defaults = {
         col = 1,
         width = 40,
         height = 1,
-        focusable = false,
-        noautocmd = true,
         style = "minimal",
     },
     width_options = {
@@ -55,7 +55,12 @@ function config.extend(opts)
         return
     end
 
-    options = vim.tbl_deep_extend("force", options, opts)
+    options = vim.tbl_deep_extend("force", options, opts, {
+        buf_options = defaults.buf_options,
+        win_options = {
+            statuscolumn = defaults.win_options.statuscolumn,
+        },
+    })
 end
 
 function config.statuscolumn()
