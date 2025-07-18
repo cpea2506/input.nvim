@@ -16,7 +16,6 @@ local function input(opts, on_confirm)
     win_config.width = utils.calculate_width(win_config.relative, width, config.width_options)
 
     local function close(winid, content)
-        vim.cmd.stopinsert()
         on_confirm(content)
         vim.api.nvim_win_close(winid, true)
     end
@@ -29,6 +28,8 @@ local function input(opts, on_confirm)
         vim.bo[bufnr][option] = value
     end
 
+    vim.bo[bufnr].buftype = "prompt"
+
     -- Create floating window.
     local winid = vim.api.nvim_open_win(bufnr, true, win_config)
 
@@ -37,19 +38,21 @@ local function input(opts, on_confirm)
         vim.wo[winid][option] = value
     end
 
-    vim.api.nvim_buf_set_text(bufnr, 0, 0, 0, 0, { default })
-    vim.cmd.startinsert()
-    vim.api.nvim_win_set_cursor(winid, { 1, vim.str_utfindex(default, "utf-8") + 1 })
+    vim.wo[winid].statuscolumn = [[%!v:lua.require("input.config").statuscolumn()]]
 
-    vim.keymap.set({ "n", "i", "v" }, "<cr>", function()
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
-
-        close(winid, lines[1])
-    end, { buffer = bufnr })
-
-    vim.keymap.set("i", "<C-c>", function()
+    vim.fn.prompt_setprompt(bufnr, "")
+    vim.fn.prompt_setcallback(bufnr, function(text)
+        close(winid, text)
+    end)
+    vim.fn.prompt_setinterrupt(bufnr, function()
         close(winid)
-    end, { buffer = bufnr })
+    end)
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
+    vim.api.nvim_win_call(winid, function()
+        vim.cmd.startinsert()
+    end)
+    vim.api.nvim_win_set_cursor(winid, { 1, vim.str_utfindex(default, "utf-8") + 1 })
 
     vim.keymap.set("n", "<esc>", function()
         close(winid)

@@ -20,7 +20,6 @@ local defaults = {
         list = true,
         listchars = "precedes:…,extends:…",
         sidescrolloff = 0,
-        statuscolumn = [[%!v:lua.require("input.config").default_statuscolumn()]],
     },
     buf_options = {
         swapfile = false,
@@ -59,7 +58,7 @@ function config.extend(opts)
     options = vim.tbl_deep_extend("force", options, opts)
 end
 
-function config.default_statuscolumn()
+function config.statuscolumn()
     return (" %%#InputIcon#%s  "):format(options.icon)
 end
 
