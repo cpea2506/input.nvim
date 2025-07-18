@@ -15,11 +15,6 @@ local function input(opts, on_confirm)
     win_config.title = utils.trim_and_pad_title(prompt)
     win_config.width = utils.calculate_width(win_config.relative, width, config.width_options)
 
-    local function close(winid, content)
-        on_confirm(content)
-        vim.api.nvim_win_close(winid, true)
-    end
-
     --- Create buffer.
     local bufnr = vim.api.nvim_create_buf(false, true)
 
@@ -29,7 +24,6 @@ local function input(opts, on_confirm)
     end
 
     vim.bo[bufnr].buftype = "prompt"
-
     -- Create floating window.
     local winid = vim.api.nvim_open_win(bufnr, true, win_config)
 
@@ -39,14 +33,18 @@ local function input(opts, on_confirm)
     end
 
     vim.wo[winid].statuscolumn = [[%!v:lua.require("input.config").statuscolumn()]]
+    local function close()
+        vim.api.nvim_win_close(winid, true)
+    end
+
+    local function confirm(content)
+        on_confirm(content)
+        close()
+    end
 
     vim.fn.prompt_setprompt(bufnr, "")
-    vim.fn.prompt_setcallback(bufnr, function(text)
-        close(winid, text)
-    end)
-    vim.fn.prompt_setinterrupt(bufnr, function()
-        close(winid)
-    end)
+    vim.fn.prompt_setcallback(bufnr, confirm)
+    vim.fn.prompt_setinterrupt(bufnr, close)
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
     vim.api.nvim_win_call(winid, function()
@@ -54,13 +52,8 @@ local function input(opts, on_confirm)
     end)
     vim.api.nvim_win_set_cursor(winid, { 1, vim.str_utfindex(default, "utf-8") + 1 })
 
-    vim.keymap.set("n", "<esc>", function()
-        close(winid)
-    end, { buffer = bufnr })
-
-    vim.keymap.set("n", "q", function()
-        close(winid)
-    end, { buffer = bufnr })
+    vim.keymap.set("n", "<esc>", close, { buffer = bufnr })
+    vim.keymap.set("n", "q", close, { buffer = bufnr })
 
     local augroup = vim.api.nvim_create_augroup("input", { clear = true })
 
@@ -70,9 +63,7 @@ local function input(opts, on_confirm)
         buffer = bufnr,
         nested = true,
         once = true,
-        callback = function()
-            close(winid)
-        end,
+        callback = close,
     })
 end
 
