@@ -64,6 +64,10 @@ function config.extend(opts)
 end
 
 function config.statuscolumn()
+    if vim.fn.hlexists "InputIcon" == 0 then
+        vim.api.nvim_set_hl(0, "InputIcon", { fg = "#56b6c2" })
+    end
+
     return (" %%#InputIcon#%s  "):format(options.icon)
 end
 
