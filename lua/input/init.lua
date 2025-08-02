@@ -36,6 +36,7 @@ local function input(opts, on_confirm)
     end
 
     local function confirm(content)
+        vim.cmd.stopinsert()
         on_confirm(content)
         close()
     end
@@ -52,6 +53,12 @@ local function input(opts, on_confirm)
 
     vim.keymap.set("n", "<esc>", close, { buffer = bufnr })
     vim.keymap.set("n", "q", close, { buffer = bufnr })
+    vim.keymap.set("n", "<cr>", function()
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+        local content = table.concat(lines, "\n")
+
+        confirm(content)
+    end, { buffer = bufnr })
 
     local augroup = vim.api.nvim_create_augroup("input", { clear = true })
 
