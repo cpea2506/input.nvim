@@ -25,26 +25,27 @@ Opinionated, simple replacement for `vim.ui.input`.
 
 ## ⚙️ Setup
 
-Once installed, this plugin is activated automatically. No setup is required unless you want to customize the options.
+This plugin works immediately after installation.
+Configuration is optional, only needed if you want to override defaults.
 
 ### Available Options
 
-| Option           | Description                               | Type                 | Note                                |
-| ---------------- | ----------------------------------------- | -------------------- | ----------------------------------- |
-| `icon`           | Icon displayed alongside the input prompt | `string`             | N/A                                 |
-| `default_prompt` | Default text shown in the input prompt    | `string`             | N/A                                 |
-| `win_options`    | Window-level Vim options                  | `table<string, any>` | `:h nvim_win_set_option`            |
-| `buf_options`    | Buffer-level Vim options                  | `table<string, any>` | `:h nvim_buf_set_option`            |
-| `win_config`     | Window configuration for `nvim_open_win`  | `table<string, any>` | `:h nvim_open_win`                  |
-| `width_options`  | Dynamic width settings                    | `table<string, any>` | See [Width Options](#width-options) |
+| Option           | Description                              | Type                 | Notes                               |
+| ---------------- | ---------------------------------------- | -------------------- | ----------------------------------- |
+| `icon`           | Icon displayed next to the prompt        | `string`             | N/A                                 |
+| `default_prompt` | Default text for the prompt              | `string`             | N/A                                 |
+| `win_options`    | Window-level Vim options                 | `table<string, any>` | See `:h nvim_win_set_option`        |
+| `buf_options`    | Buffer-level Vim options                 | `table<string, any>` | See `:h nvim_buf_set_option`        |
+| `win_config`     | Window configuration for `nvim_open_win` | `table<string, any>` | See `:h nvim_open_win`              |
+| `width_options`  | Dynamic width settings                   | `table<string, any>` | See [Width Options](#width-options) |
 
 #### Width Options
 
-| Sub-Option  | Description           | Type               | Note                                  |
-| ----------- | --------------------- | ------------------ | ------------------------------------- |
-| `prefer`    | Preferred input width | `number`           | Used as the default target width      |
-| `min_value` | Minimum allowed width | `{number, number}` | Supports fixed width and window ratio |
-| `max_value` | Maximum allowed width | `{number, number}` | Supports fixed width and window ratio |
+| Sub-Option  | Description           | Type               | Notes                                |
+| ----------- | --------------------- | ------------------ | ------------------------------------ |
+| `prefer`    | Preferred input width | `number`           | Default target width                 |
+| `min_value` | Minimum allowed width | `{number, number}` | Fixed width or ratio of window width |
+| `max_value` | Maximum allowed width | `{number, number}` | Fixed width or ratio of window width |
 
 ### Default Configuration
 
@@ -58,11 +59,7 @@ require("input").setup({
         listchars = "precedes:…,extends:…",
         sidescrolloff = 0,
     },
-    buf_options = {
-        swapfile = false,
-        bufhidden = "wipe",
-        filetype = "input",
-    },
+    buf_options = {},
     win_config = {
         relative = "cursor",
         anchor = "NW",
@@ -83,7 +80,35 @@ require("input").setup({
 })
 ```
 
-## :eyes: Inspiration
+## ⌨️ Key Mappings
+
+These are the default key mappings:
+
+| Keybinding | Mode(s) | Action                                  |
+| ---------- | ------- | --------------------------------------- |
+| `<C-c>`    | i, n    | Cancel content changes and close input  |
+| `q`        | n       | Cancel content changes and close input  |
+| `<CR>`     | i, n    | Confirm content changes and close input |
+
+## 🎨 Highlights
+
+| Highlight Group | Purpose                                               |
+| --------------- | ----------------------------------------------------- |
+| `InputIcon`     | Status column icon, which displayed before the prompt |
+
+To customize highlights for the plugin window:
+
+```lua
+require("input").setup({
+  win_options = {
+    winhighlight = "NormalFloat:DiagnosticError"
+  }
+})
+```
+
+For more, see `:h winhighlight`.
+
+## 👀 Inspiration
 
 - [dressing.nvim](https://github.com/stevearc/dressing.nvim)
 
