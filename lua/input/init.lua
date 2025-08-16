@@ -1,6 +1,10 @@
 local M = {}
 
+---@param opts? vim.ui.input.Opts
+---@param on_confirm fun(input?: string)
 local function input(opts, on_confirm)
+    opts = (opts and not vim.tbl_isempty(opts)) and opts or vim.empty_dict()
+
     local config = require "input.config"
     local utils = require "input.utils"
     local win_config = config.win_config

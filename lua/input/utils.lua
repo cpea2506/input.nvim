@@ -1,6 +1,9 @@
 ---Thanks: https://github.com/stevearc/dressing.nvim/blob/master/lua/dressing/util.lua
 local M = {}
 
+---@param value number
+---@param max_value number
+---@return number
 local function calculate_float(value, max_value)
     if value then
         local _, p = math.modf(value)
@@ -13,6 +16,11 @@ local function calculate_float(value, max_value)
     return value
 end
 
+---@param value number[]
+---@param max_value number
+---@param aggregator fun(x: number, ...: number)
+---@param limit number
+---@return number
 local function calculate_list(value, max_value, aggregator, limit)
     local result = limit
 
@@ -23,6 +31,9 @@ local function calculate_list(value, max_value, aggregator, limit)
     return result
 end
 
+---@param relative "cursor"|"editor"|"laststatus"|"mouse"|"tabline"|"win"
+---@param winid? integer
+---@return integer
 local function get_max_width(relative, winid)
     return relative == "editor" and vim.o.columns or vim.api.nvim_win_get_width(winid or 0)
 end
@@ -48,7 +59,7 @@ local function calculate_size(current_size, size_options, total_size)
 end
 
 ---Calculate width.
----@param relative "cursor"|"editor"
+---@param relative "cursor"|"editor"|"laststatus"|"mouse"|"tabline"|"win"
 ---@param current_size number
 ---@param width_options input.width_options
 ---@return integer
@@ -57,7 +68,7 @@ function M.calculate_width(relative, current_size, width_options)
 end
 
 ---Get max string width.
----@param lines table<string>
+---@param lines string[]
 ---@return integer
 function M.get_max_strwidth(lines)
     local max = 0
