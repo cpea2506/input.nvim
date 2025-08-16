@@ -1,17 +1,18 @@
-local config = {}
-
 ---@class input.width_options
 ---@field prefer number
 ---@field min_value number[]
 ---@field max_value number[]
 
----@class input.options
+---@class input.config
 ---@field icon string
 ---@field default_prompt string
 ---@field win_options vim.wo
 ---@field buf_options vim.bo
 ---@field win_config vim.api.keyset.win_config
 ---@field width_options input.width_options
+local config = {}
+
+---@type input.config
 local defaults = {
     icon = "",
     default_prompt = "Input",
@@ -45,11 +46,10 @@ local defaults = {
     },
 }
 
----@type input.options
 local options = vim.deepcopy(defaults)
 
 ---Extend default with user's config.
----@param opts input.options
+---@param opts input.config
 function config.extend(opts)
     if not opts or vim.tbl_isempty(opts) then
         return
