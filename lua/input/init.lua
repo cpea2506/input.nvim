@@ -53,11 +53,11 @@ local function input(opts, on_confirm)
     vim.fn.prompt_setcallback(bufnr, confirm)
     vim.fn.prompt_setinterrupt(bufnr, cancel)
 
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
     vim.api.nvim_win_call(winid, function()
+        vim.api.nvim_put({ default }, "", true, false)
         vim.cmd.startinsert()
     end)
-    vim.api.nvim_win_set_cursor(winid, { 1, vim.str_utfindex(default, "utf-8") + 1 })
+    vim.api.nvim_win_set_cursor(winid, { 1, #default })
 
     vim.keymap.set("n", "<esc>", cancel, { buffer = bufnr })
     vim.keymap.set("n", "q", cancel, { buffer = bufnr })
