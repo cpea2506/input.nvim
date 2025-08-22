@@ -3,7 +3,7 @@ local M = {}
 ---@param opts? vim.ui.input.Opts
 ---@param on_confirm fun(input?: string)
 local function input(opts, on_confirm)
-    opts = (opts and not vim.tbl_isempty(opts)) and opts or vim.empty_dict()
+    opts = opts or {}
 
     local config = require "input.config"
     local utils = require "input.utils"
@@ -19,7 +19,7 @@ local function input(opts, on_confirm)
     win_config.title = utils.trim_and_pad_title(prompt)
     win_config.width = utils.calculate_width(win_config.relative, width, config.width_options)
 
-    --- Create buffer.
+    -- Create buffer.
     local bufnr = vim.api.nvim_create_buf(false, true)
 
     -- Set buffer options.
@@ -36,18 +36,22 @@ local function input(opts, on_confirm)
     end
 
     local function close()
+        vim.cmd.stopinsert()
         vim.api.nvim_win_close(winid, true)
     end
 
     local function confirm(content)
-        vim.cmd.stopinsert()
         on_confirm(content)
         close()
     end
 
+    local function cancel()
+        confirm(nil)
+    end
+
     vim.fn.prompt_setprompt(bufnr, "")
     vim.fn.prompt_setcallback(bufnr, confirm)
-    vim.fn.prompt_setinterrupt(bufnr, close)
+    vim.fn.prompt_setinterrupt(bufnr, cancel)
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
     vim.api.nvim_win_call(winid, function()
@@ -55,8 +59,8 @@ local function input(opts, on_confirm)
     end)
     vim.api.nvim_win_set_cursor(winid, { 1, vim.str_utfindex(default, "utf-8") + 1 })
 
-    vim.keymap.set("n", "<esc>", close, { buffer = bufnr })
-    vim.keymap.set("n", "q", close, { buffer = bufnr })
+    vim.keymap.set("n", "<esc>", cancel, { buffer = bufnr })
+    vim.keymap.set("n", "q", cancel, { buffer = bufnr })
     vim.keymap.set("n", "<cr>", function()
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
         local content = table.concat(lines, "\n")
@@ -72,7 +76,7 @@ local function input(opts, on_confirm)
         buffer = bufnr,
         nested = true,
         once = true,
-        callback = close,
+        callback = cancel,
     })
 end
 
