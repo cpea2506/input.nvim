@@ -14,7 +14,7 @@ local config = {}
 
 ---@type input.config
 local defaults = {
-    icon = "",
+    icon = " ",
     default_prompt = "Input",
     win_options = {
         wrap = false,
@@ -63,7 +63,7 @@ function config.statuscolumn()
         vim.api.nvim_set_hl(0, "InputIcon", { fg = "#56b6c2" })
     end
 
-    return (" %%#InputIcon#%s  "):format(options.icon)
+    return (" %%#InputIcon#%s "):format(options.icon)
 end
 
 setmetatable(config, {
