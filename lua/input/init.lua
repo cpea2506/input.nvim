@@ -64,7 +64,7 @@ local function input(opts, on_confirm)
     vim.fn.prompt_setinterrupt(bufnr, cancel)
 
     vim.api.nvim_win_call(winid, function()
-        vim.api.nvim_put({ default }, "", true, false)
+        vim.api.nvim_buf_set_text(bufnr, 0, icon_end_col, 0, icon_end_col, { default })
         vim.cmd.startinsert()
     end)
     vim.api.nvim_win_set_cursor(winid, { 1, #default + icon_end_col })
@@ -91,7 +91,7 @@ local function input(opts, on_confirm)
         buffer = bufnr,
         nested = true,
         once = true,
-        callback = cancel,
+        callback = close,
     })
 
     vim.api.nvim_create_autocmd("CursorMoved", {
