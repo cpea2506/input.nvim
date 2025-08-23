@@ -55,12 +55,7 @@ function config.extend(opts)
         return
     end
 
-    options = vim.tbl_deep_extend("force", options, opts, {
-        buf_options = defaults.buf_options,
-        win_options = {
-            statuscolumn = defaults.win_options.statuscolumn,
-        },
-    })
+    options = vim.tbl_deep_extend("force", options, opts)
 end
 
 function config.statuscolumn()
