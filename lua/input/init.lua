@@ -54,7 +54,7 @@ local function input(opts, on_confirm)
     vim.fn.prompt_setinterrupt(bufnr, cancel)
 
     vim.api.nvim_win_call(winid, function()
-        vim.api.nvim_put({ default }, "", true, false)
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
         vim.cmd.startinsert()
     end)
     vim.api.nvim_win_set_cursor(winid, { 1, #default })
