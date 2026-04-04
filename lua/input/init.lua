@@ -49,7 +49,10 @@ local function input(opts, on_confirm)
         confirm(nil)
     end
 
-    vim.fn.prompt_setprompt(bufnr, "")
+    local prompt_icon = (" %s "):format(config.icon)
+    local icon_end_col = #prompt_icon
+
+    vim.fn.prompt_setprompt(bufnr, prompt_icon)
     vim.fn.prompt_setcallback(bufnr, confirm)
     vim.fn.prompt_setinterrupt(bufnr, cancel)
 
@@ -57,7 +60,14 @@ local function input(opts, on_confirm)
         vim.api.nvim_put({ default }, "", true, false)
         vim.cmd.startinsert()
     end)
-    vim.api.nvim_win_set_cursor(winid, { 1, #default })
+    vim.api.nvim_win_set_cursor(winid, { 1, #default + icon_end_col })
+
+    local ns = vim.api.nvim_create_namespace "input"
+
+    vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 1, {
+        hl_group = "InputIcon",
+        end_col = icon_end_col - 1,
+    })
 
     vim.keymap.set("n", "<esc>", cancel, { buffer = bufnr })
     vim.keymap.set("n", "q", cancel, { buffer = bufnr })
@@ -76,10 +86,28 @@ local function input(opts, on_confirm)
         once = true,
         callback = cancel,
     })
+
+    vim.api.nvim_create_autocmd("CursorMoved", {
+        group = augroup,
+        desc = "Constrain prompt cursor position",
+        buffer = bufnr,
+        nested = true,
+        callback = function()
+            local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
+
+            if col < icon_end_col then
+                vim.api.nvim_win_set_cursor(winid, { row, icon_end_col })
+            end
+        end,
+    })
 end
 
 function M.setup(opts)
     local config = require "input.config"
+
+    if vim.fn.hlexists "InputIcon" == 0 then
+        vim.api.nvim_set_hl(0, "InputIcon", { link = "Keyword" })
+    end
 
     config.extend(opts)
 
