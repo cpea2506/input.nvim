@@ -7,7 +7,6 @@
 ---@field icon string
 ---@field default_prompt string
 ---@field win_options vim.wo
----@field buf_options vim.bo
 ---@field win_config vim.api.keyset.win_config
 ---@field width_options input.width_options
 local config = {}
@@ -21,12 +20,6 @@ local defaults = {
         list = true,
         listchars = "precedes:…,extends:…",
         sidescrolloff = 0,
-    },
-    buf_options = {
-        swapfile = false,
-        buftype = "prompt",
-        bufhidden = "wipe",
-        filetype = "input",
     },
     win_config = {
         relative = "cursor",
