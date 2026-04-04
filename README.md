@@ -35,7 +35,6 @@ Configuration is optional, only needed if you want to override defaults.
 | `icon`           | Icon displayed next to the prompt        | `string`             | N/A                                 |
 | `default_prompt` | Default text for the prompt              | `string`             | N/A                                 |
 | `win_options`    | Window-level Vim options                 | `table<string, any>` | See `:h nvim_win_set_option`        |
-| `buf_options`    | Buffer-level Vim options                 | `table<string, any>` | See `:h nvim_buf_set_option`        |
 | `win_config`     | Window configuration for `nvim_open_win` | `table<string, any>` | See `:h nvim_open_win`              |
 | `width_options`  | Dynamic width settings                   | `table<string, any>` | See [Width Options](#width-options) |
 
@@ -59,7 +58,6 @@ require("input").setup({
         listchars = "precedes:…,extends:…",
         sidescrolloff = 0,
     },
-    buf_options = {},
     win_config = {
         relative = "cursor",
         anchor = "NW",

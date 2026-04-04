@@ -1,5 +1,12 @@
 local M = {}
 
+local buf_options = {
+    swapfile = false,
+    buftype = "prompt",
+    bufhidden = "wipe",
+    filetype = "input",
+}
+
 ---@param opts? vim.ui.input.Opts
 ---@param on_confirm fun(input?: string)
 local function input(opts, on_confirm)
@@ -23,7 +30,7 @@ local function input(opts, on_confirm)
     local bufnr = vim.api.nvim_create_buf(false, true)
 
     -- Set buffer options.
-    for option, value in pairs(config.buf_options) do
+    for option, value in pairs(buf_options) do
         vim.bo[bufnr][option] = value
     end
 
