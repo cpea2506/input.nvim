@@ -21,7 +21,6 @@ local defaults = {
         list = true,
         listchars = "precedes:…,extends:…",
         sidescrolloff = 0,
-        statuscolumn = [[%!v:lua.require("input.config").statuscolumn()]],
     },
     buf_options = {
         swapfile = false,
@@ -56,14 +55,6 @@ function config.extend(opts)
     end
 
     options = vim.tbl_deep_extend("force", options, opts)
-end
-
-function config.statuscolumn()
-    if vim.fn.hlexists "InputIcon" == 0 then
-        vim.api.nvim_set_hl(0, "InputIcon", { fg = "#56b6c2" })
-    end
-
-    return (" %%#InputIcon#%s "):format(options.icon)
 end
 
 setmetatable(config, {
