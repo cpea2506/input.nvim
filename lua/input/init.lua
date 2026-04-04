@@ -62,9 +62,7 @@ local function input(opts, on_confirm)
     vim.keymap.set("n", "<esc>", cancel, { buffer = bufnr })
     vim.keymap.set("n", "q", cancel, { buffer = bufnr })
     vim.keymap.set("n", "<cr>", function()
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        local content = table.concat(lines, "\n")
-
+        local content = vim.fn.prompt_getinput(bufnr)
         confirm(content)
     end, { buffer = bufnr })
 

@@ -3,7 +3,7 @@ local config = require "input.config"
 
 describe("Config options", function()
     it("could be indexed without options field", function()
-        assert.equal("", config.icon)
+        assert.equal(" ", config.icon)
         assert.equal("Input", config.default_prompt)
     end)
 end)

@@ -21,7 +21,7 @@ Opinionated, simple replacement for `vim.ui.input`.
 
 ### Requirements
 
-- Neovim >= 0.11.0
+- Neovim >= 0.12.0
 
 ## ⚙️ Setup
 
