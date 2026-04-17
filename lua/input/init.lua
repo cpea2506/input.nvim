@@ -7,24 +7,27 @@ local buf_options = {
     filetype = "input",
 }
 
+---Trim and pad title.
+---@param title string
+---@return string
+local function trim_and_pad_title(title)
+    title = vim.trim(title):gsub(":$", "")
+
+    return (" %s "):format(title)
+end
+
 ---@param opts? vim.ui.input.Opts
 ---@param on_confirm fun(input?: string)
 local function input(opts, on_confirm)
     opts = opts or {}
 
     local config = require "input.config"
-    local utils = require "input.utils"
     local win_config = config.win_config
 
     local prompt = opts.prompt or config.default_prompt
     local default = opts.default or ""
-    local prompt_lines = vim.split(prompt, "\n", { plain = true, trimempty = true })
 
-    local width = utils.calculate_width(win_config.relative, win_config.width, config.width_options)
-    width = math.max(width, utils.get_max_strwidth(prompt_lines) + 4, vim.api.nvim_strwidth(default) + 2)
-
-    win_config.title = utils.trim_and_pad_title(prompt)
-    win_config.width = utils.calculate_width(win_config.relative, width, config.width_options)
+    win_config.title = trim_and_pad_title(prompt)
 
     -- Create buffer.
     local bufnr = vim.api.nvim_create_buf(false, true)
