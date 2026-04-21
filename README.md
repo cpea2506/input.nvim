@@ -30,21 +30,22 @@ Configuration is optional, only needed if you want to override defaults.
 
 ### Available Options
 
-| Option           | Description                              | Type                 | Notes                               |
-| ---------------- | ---------------------------------------- | -------------------- | ----------------------------------- |
-| `icon`           | Icon displayed next to the prompt        | `string`             | N/A                                 |
-| `default_prompt` | Default text for the prompt              | `string`             | N/A                                 |
-| `win_options`    | Window-level Vim options                 | `table<string, any>` | See `:h nvim_win_set_option`        |
-| `win_config`     | Window configuration for `nvim_open_win` | `table<string, any>` | See `:h nvim_open_win`              |
-| `width_options`  | Dynamic width settings                   | `table<string, any>` | See [Width Options](#width-options) |
+| Option           | Description                              | Type                 | Notes                             |
+| ---------------- | ---------------------------------------- | -------------------- | --------------------------------- |
+| `icon`           | Icon displayed next to the prompt        | `string`             | N/A                               |
+| `default_prompt` | Default text for the prompt              | `string`             | N/A                               |
+| `win_options`    | Window-level Vim options                 | `table<string, any>` | See `:h nvim_win_set_option`      |
+| `win_config`     | Window configuration for `nvim_open_win` | `table<string, any>` | See `:h nvim_open_win`            |
+| `size_options`   | Dynamic sizing configuration             | `table`              | See [Size Options](#size-options) |
 
-#### Width Options
+#### Size Options
 
-| Sub-Option  | Description           | Type               | Notes                                |
-| ----------- | --------------------- | ------------------ | ------------------------------------ |
-| `prefer`    | Preferred input width | `number`           | Default target width                 |
-| `min_value` | Minimum allowed width | `{number, number}` | Fixed width or ratio of window width |
-| `max_value` | Maximum allowed width | `{number, number}` | Fixed width or ratio of window width |
+| Option       | Description                        | Type      | Notes |
+| ------------ | ---------------------------------- | --------- | ----- |
+| `width.min`  | Minimum width of the input window  | `integer` | N/A   |
+| `width.max`  | Maximum width of the input window  | `integer` | N/A   |
+| `height.min` | Minimum height of the input window | `integer` | N/A   |
+| `height.max` | Maximum height of the input window | `integer` | N/A   |
 
 ### Default Configuration
 
@@ -53,27 +54,29 @@ require("input").setup({
     icon = "",
     default_prompt = "Input",
     win_options = {
-        wrap = false,
-        list = true,
-        listchars = "precedes:…,extends:…",
-        sidescrolloff = 0,
+        wrap = true,
+        linebreak = true,
+        winhighlight = "Search:None",
     },
     win_config = {
         relative = "cursor",
         anchor = "NW",
         border = vim.o.winborder,
         row = 1,
-        col = 1,
-        width = 40,
+        col = -1,
+        width = 1,
         height = 1,
-        focusable = false,
-        noautocmd = true,
         style = "minimal",
     },
-    width_options = {
-        prefer = 40,
-        min_value = { 20, 0.2 },
-        max_value = { 140, 0.9 },
+    size_options = {
+        width = {
+            min = 40,
+            max = 60,
+        },
+        height = {
+            min = 1,
+            max = 6,
+        },
     },
 })
 ```
@@ -85,6 +88,7 @@ These are the default key mappings:
 | Keybinding | Mode(s) | Action                                  |
 | ---------- | ------- | --------------------------------------- |
 | `<C-c>`    | i, n    | Cancel content changes and close input  |
+| `<Esc>`    | n       | Cancel content changes and close input  |
 | `q`        | n       | Cancel content changes and close input  |
 | `<CR>`     | i, n    | Confirm content changes and close input |
 
@@ -109,6 +113,7 @@ For more, see `:h winhighlight`.
 ## 👀 Inspiration
 
 - [dressing.nvim](https://github.com/stevearc/dressing.nvim)
+- [multinput.nvim](https://github.com/r0nsha/multinput.nvim)
 
 ## :scroll: Contribution
 
