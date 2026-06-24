@@ -4,13 +4,6 @@ local M = setmetatable({}, {
     end,
 })
 
-local buf_options = {
-    swapfile = false,
-    buftype = "prompt",
-    bufhidden = "wipe",
-    filetype = "input",
-}
-
 ---Trim and pad title.
 ---@param title string
 ---@return string
@@ -53,131 +46,197 @@ local function split_wrapped_lines(text, width)
     return lines
 end
 
----@param opts? vim.ui.input.Opts
----@param on_confirm fun(input?: string)
-function M.input(opts, on_confirm)
+---@generic T
+---@class Input
+---@field on_confirm fun(input?: string)
+---@field winid integer
+---@field buf integer
+---@field prompt string
+---@field prompt_icon string
+---@field default string
+---@field icon_end_col integer
+local Input = {}
+Input.__index = Input
+
+function Input.new(opts, on_confirm)
     opts = opts or {}
 
     local config = require "input.config"
+    local prompt_icon = (" %s "):format(config.icon)
 
-    local size_options = config.size_options
-    local win_config = config.win_config
+    return setmetatable({
+        on_confirm = on_confirm,
+        winid = nil,
+        bufnr = nil,
+        prompt = opts.prompt or config.default_prompt,
+        prompt_icon = prompt_icon,
+        icon_end_col = vim.fn.strlen(prompt_icon),
+        default = opts.default or "",
+    }, Input)
+end
 
-    local prompt = opts.prompt or config.default_prompt
-    local default = opts.default or ""
+function Input:close()
+    vim.cmd.stopinsert()
 
-    win_config.title = trim_and_pad_title(prompt)
+    if self.winid and vim.api.nvim_win_is_valid(self.winid) then
+        vim.api.nvim_win_close(self.winid, true)
+    end
 
+    if self.buf and vim.api.nvim_buf_is_valid(self.buf) then
+        vim.api.nvim_buf_delete(self.buf, { force = true })
+    end
+end
+
+function Input:confirm(content)
+    self:close()
+    self.on_confirm(content)
+end
+
+function Input:cancel()
+    self:confirm(nil)
+end
+
+function Input:create_buffer()
     -- Create buffer.
-    local bufnr = vim.api.nvim_create_buf(false, true)
+    self.buf = vim.api.nvim_create_buf(false, true)
+
+    ---@type vim.bo
+    local buf_options = {
+        swapfile = false,
+        buftype = "prompt",
+        bufhidden = "wipe",
+        filetype = "input",
+    }
 
     -- Set buffer options.
     for option, value in pairs(buf_options) do
-        vim.bo[bufnr][option] = value
+        vim.bo[self.buf][option] = value
+    end
+end
+
+function Input:resize()
+    local config = require "input.config"
+    local size_options = config.size_options
+    local content = table.concat(vim.api.nvim_buf_get_lines(self.buf, 0, -1, false), "")
+    local width, height = size_options.width.min, size_options.height.min
+
+    if content ~= "" then
+        local lines = split_wrapped_lines(content, size_options.width.max)
+        local max_len_width = vim.iter(lines):fold(size_options.width.min, function(acc, line)
+            return math.max(acc, vim.api.nvim_strwidth(line))
+        end)
+
+        width = clamp(max_len_width, size_options.width.min, size_options.width.max) + 1
+        height = clamp(
+            width == size_options.width.max + 1 and #lines + 1 or #lines,
+            size_options.height.min,
+            size_options.height.max
+        )
     end
 
+    vim.api.nvim_win_set_config(self.winid, { width = width, height = height })
+end
+
+function Input:setup_prompt()
+    vim.fn.prompt_setprompt(self.buf, self.prompt_icon)
+    vim.fn.prompt_setcallback(self.buf, function(content)
+        self:confirm(content)
+    end)
+    vim.fn.prompt_setinterrupt(self.buf, function()
+        self:cancel()
+    end)
+end
+
+function Input:open_window()
+    local config = require "input.config"
+    local win_config = config.win_config
+
+    win_config.title = trim_and_pad_title(self.prompt)
+
     -- Create floating window.
-    local winid = vim.api.nvim_open_win(bufnr, true, win_config)
+    self.winid = vim.api.nvim_open_win(self.buf, true, win_config)
 
     -- Set window options.
     for option, value in pairs(config.win_options) do
-        vim.wo[winid][option] = value
+        vim.wo[self.winid][option] = value
     end
 
-    local function close()
-        vim.cmd.stopinsert()
-        vim.api.nvim_win_close(winid, true)
-    end
-
-    local function confirm(content)
-        on_confirm(content)
-        close()
-    end
-
-    local function cancel()
-        confirm(nil)
-    end
-
-    local function resize()
-        local content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "")
-        local width, height = size_options.width.min, size_options.height.min
-
-        if content ~= "" then
-            local lines = split_wrapped_lines(content, size_options.width.max)
-            local max_len_width = vim.iter(lines):fold(size_options.width.min, function(acc, line)
-                return math.max(acc, vim.api.nvim_strwidth(line))
-            end)
-
-            width = clamp(max_len_width, size_options.width.min, size_options.width.max) + 1
-            height = clamp(
-                width == size_options.width.max + 1 and #lines + 1 or #lines,
-                size_options.height.min,
-                size_options.height.max
-            )
-        end
-
-        vim.api.nvim_win_set_config(winid, { width = width, height = height })
-    end
-
-    local prompt_icon = (" %s "):format(config.icon)
-    local icon_end_col = vim.fn.strlen(prompt_icon)
-
-    vim.fn.prompt_setprompt(bufnr, prompt_icon)
-    vim.fn.prompt_setcallback(bufnr, confirm)
-    vim.fn.prompt_setinterrupt(bufnr, cancel)
-
-    vim.api.nvim_win_call(winid, function()
-        vim.api.nvim_buf_set_text(bufnr, 0, icon_end_col, 0, icon_end_col, { default })
-        resize()
+    vim.api.nvim_win_call(self.winid, function()
+        vim.api.nvim_buf_set_text(self.buf, 0, self.icon_end_col, 0, self.icon_end_col, { self.default })
+        self:resize()
         vim.cmd.startinsert()
     end)
-    vim.api.nvim_win_set_cursor(winid, { 1, vim.api.nvim_strwidth(default) + icon_end_col })
+    vim.api.nvim_win_set_cursor(self.winid, { 1, vim.api.nvim_strwidth(self.default) + self.icon_end_col })
 
     local ns = vim.api.nvim_create_namespace "input"
 
-    vim.hl.range(bufnr, ns, "InputIcon", { 0, 1 }, { 0, icon_end_col })
+    vim.hl.range(self.buf, ns, "InputIcon", { 0, 1 }, { 0, self.icon_end_col })
+end
 
-    vim.keymap.set("n", "<esc>", cancel, { buffer = bufnr })
-    vim.keymap.set("n", "q", cancel, { buffer = bufnr })
+function Input:set_keymaps()
+    vim.keymap.set("n", "<esc>", self.cancel, { buffer = self.buf })
+    vim.keymap.set("n", "q", self.cancel, { buffer = self.buf })
     vim.keymap.set("n", "<cr>", function()
-        local content = vim.fn.prompt_getinput(bufnr)
-        confirm(content)
-    end, { buffer = bufnr })
+        local content = vim.fn.prompt_getinput(self.buf)
+        self:confirm(content)
+    end, { buffer = self.buf })
+end
 
+function Input:create_autocmds()
     local augroup = vim.api.nvim_create_augroup("input", { clear = true })
 
     vim.api.nvim_create_autocmd("BufLeave", {
         group = augroup,
         desc = "Cancel vim.ui.input",
-        buffer = bufnr,
+        buffer = self.buf,
         nested = true,
         once = true,
-        callback = close,
+        callback = function()
+            self:close()
+        end,
     })
-
     vim.api.nvim_create_autocmd("CursorMoved", {
         group = augroup,
         desc = "Constrain prompt cursor position",
-        buffer = bufnr,
+        buffer = self.buf,
         nested = true,
         callback = function()
-            local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
+            local row, col = unpack(vim.api.nvim_win_get_cursor(self.winid))
 
-            if col < icon_end_col then
-                vim.api.nvim_win_set_cursor(winid, { row, icon_end_col })
+            if col < self.icon_end_col then
+                vim.api.nvim_win_set_cursor(self.winid, { row, self.icon_end_col })
             end
         end,
     })
-
     vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
         group = augroup,
         desc = "Resize vim.ui.input",
-        buffer = bufnr,
+        buffer = self.buf,
         nested = true,
         callback = function()
-            resize()
+            self:resize()
         end,
     })
+end
+
+function Input:show()
+    self:create_buffer()
+    self:setup_prompt()
+    self:open_window()
+    self:set_keymaps()
+    self:create_autocmds()
+end
+
+---@type Input
+local instance = nil
+
+function M.input(opts, on_confirm)
+    if instance then
+        instance:close()
+    end
+
+    instance = Input.new(opts, on_confirm)
+    instance:show()
 end
 
 return M
