@@ -83,10 +83,6 @@ function Input:close()
     if self.winid and vim.api.nvim_win_is_valid(self.winid) then
         vim.api.nvim_win_close(self.winid, true)
     end
-
-    if self.buf and vim.api.nvim_buf_is_valid(self.buf) then
-        vim.api.nvim_buf_delete(self.buf, { force = true })
-    end
 end
 
 ---@param content string?
