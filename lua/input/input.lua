@@ -1,8 +1,6 @@
-local M = setmetatable({}, {
-    __call = function(t, ...)
-        return t.input(...)
-    end,
-})
+---@class InputModule
+---@overload fun(opts?: vim.ui.input.Opts, on_confirm: fun(input?: string))
+local M = {}
 
 ---Trim and pad title.
 ---@param title string
@@ -14,16 +12,19 @@ local function trim_and_pad_title(title)
 end
 
 ---Clamp value to between min and max.
----@param value number
----@param min number
----@param max number
+---@generic T: number|integer
+---@param value T
+---@param min T
+---@param max T
+---@return T
 local function clamp(value, min, max)
     return math.max(math.min(value, max), min)
 end
 
 ---Split wrapped lines.
 ---@param text string
----@param width number
+---@param width integer
+---@return string[]
 local function split_wrapped_lines(text, width)
     if text == "" then
         return {}
@@ -46,7 +47,6 @@ local function split_wrapped_lines(text, width)
     return lines
 end
 
----@generic T
 ---@class Input
 ---@field on_confirm fun(input?: string)
 ---@field winid integer
@@ -58,17 +58,19 @@ end
 local Input = {}
 Input.__index = Input
 
+---@param opts? vim.ui.input.Opts
+---@param on_confirm fun(input?: string)
 function Input.new(opts, on_confirm)
     opts = opts or {}
 
     local config = require "input.config"
-    local prompt_icon = (" %s "):format(config.icon)
+    local prompt_icon = (" %s "):format(config.options.icon)
 
     return setmetatable({
         on_confirm = on_confirm,
         winid = nil,
-        bufnr = nil,
-        prompt = opts.prompt or config.default_prompt,
+        buf = nil,
+        prompt = opts.prompt or config.options.default_prompt,
         prompt_icon = prompt_icon,
         icon_end_col = vim.fn.strlen(prompt_icon),
         default = opts.default or "",
@@ -87,6 +89,7 @@ function Input:close()
     end
 end
 
+---@param content string?
 function Input:confirm(content)
     self:close()
     self.on_confirm(content)
@@ -100,7 +103,7 @@ function Input:create_buffer()
     -- Create buffer.
     self.buf = vim.api.nvim_create_buf(false, true)
 
-    ---@type vim.bo
+    ---@type Partial<vim.bo>
     local buf_options = {
         swapfile = false,
         buftype = "prompt",
@@ -116,7 +119,7 @@ end
 
 function Input:resize()
     local config = require "input.config"
-    local size_options = config.size_options
+    local size_options = config.options.size_options
     local content = table.concat(vim.api.nvim_buf_get_lines(self.buf, 0, -1, false), "")
     local width, height = size_options.width.min, size_options.height.min
 
@@ -149,7 +152,7 @@ end
 
 function Input:open_window()
     local config = require "input.config"
-    local win_config = config.win_config
+    local win_config = config.options.win_config
 
     win_config.title = trim_and_pad_title(self.prompt)
 
@@ -157,7 +160,7 @@ function Input:open_window()
     self.winid = vim.api.nvim_open_win(self.buf, true, win_config)
 
     -- Set window options.
-    for option, value in pairs(config.win_options) do
+    for option, value in pairs(config.options.win_options) do
         vim.wo[self.winid][option] = value
     end
 
@@ -231,10 +234,12 @@ function Input:show()
     self:create_autocmds()
 end
 
----@type Input
+---@type Input?
 local instance = nil
 
-function M.input(opts, on_confirm)
+---@param opts? vim.ui.input.Opts
+---@param on_confirm fun(input?: string)
+local function input(opts, on_confirm)
     if instance then
         instance:close()
     end
@@ -242,5 +247,11 @@ function M.input(opts, on_confirm)
     instance = Input.new(opts, on_confirm)
     instance:show()
 end
+
+setmetatable(M, {
+    __call = function(_, ...)
+        input(...)
+    end,
+})
 
 return M
